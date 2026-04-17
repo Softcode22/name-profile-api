@@ -8,7 +8,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-connectDB();
+// Connect to DB on every request
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
 
 app.use('/api/profiles', profileRoutes);
 

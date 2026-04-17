@@ -106,6 +106,9 @@ router.get('/', async (req, res) => {
       message: err.message
     });
   }
+});
+
+module.exports = router;
 
 // GET /api/profiles/:id
 router.get('/:id', async (req, res) => {

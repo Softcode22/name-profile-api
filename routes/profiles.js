@@ -57,7 +57,7 @@ router.post('/', async (req, res) => {
     );
 
     const profile = new Profile({
-      id: uuidv7(),
+      id: uuidv4(),
       name: name.toLowerCase(),
       gender: genderData.gender,
       gender_probability: genderData.probability,

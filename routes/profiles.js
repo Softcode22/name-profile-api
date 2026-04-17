@@ -3,7 +3,6 @@ const router = express.Router();
 const { v7: uuidv7 } = require('uuid');
 const Profile = require('../models/Profile');
 
-// Helper: classify age group
 const getAgeGroup = (age) => {
   if (age <= 12) return 'child';
   if (age <= 19) return 'teenager';
@@ -11,11 +10,9 @@ const getAgeGroup = (age) => {
   return 'senior';
 };
 
-// POST /api/profiles
 router.post('/', async (req, res) => {
   const { name } = req.body;
 
-  // Validation
   if (!name || name === '') {
     return res.status(400).json({ status: 'error', message: 'Missing or empty name' });
   }
@@ -23,18 +20,16 @@ router.post('/', async (req, res) => {
     return res.status(422).json({ status: 'error', message: 'Name must be a string' });
   }
 
-  // Check for duplicate
-  const existing = await Profile.findOne({ name: name.toLowerCase() });
-  if (existing) {
-    return res.status(200).json({
-      status: 'success',
-      message: 'Profile already exists',
-      data: existing
-    });
-  }
-
-  // Call all 3 APIs simultaneously
   try {
+    const existing = await Profile.findOne({ name: name.toLowerCase() });
+    if (existing) {
+      return res.status(200).json({
+        status: 'success',
+        message: 'Profile already exists',
+        data: existing
+      });
+    }
+
     const [genderRes, ageRes, nationRes] = await Promise.all([
       fetch(`https://api.genderize.io?name=${encodeURIComponent(name)}`),
       fetch(`https://api.agify.io?name=${encodeURIComponent(name)}`),
@@ -47,7 +42,6 @@ router.post('/', async (req, res) => {
       nationRes.json()
     ]);
 
-    // Edge cases
     if (!genderData.gender || genderData.count === 0) {
       return res.status(502).json({ status: 'error', message: 'Genderize returned an invalid response' });
     }
@@ -58,12 +52,10 @@ router.post('/', async (req, res) => {
       return res.status(502).json({ status: 'error', message: 'Nationalize returned an invalid response' });
     }
 
-    // Pick country with highest probability
     const topCountry = nationData.country.reduce((a, b) =>
       a.probability > b.probability ? a : b
     );
 
-    // Build profile
     const profile = new Profile({
       id: uuidv7(),
       name: name.toLowerCase(),
@@ -82,16 +74,15 @@ router.post('/', async (req, res) => {
     return res.status(201).json({ status: 'success', data: profile });
 
   } catch (err) {
-    return res.status(500).json({ status: 'error', message: 'Internal server error' });
+    return res.status(500).json({ status: 'error', message: err.message });
   }
 });
 
-// GET /api/profiles
 router.get('/', async (req, res) => {
   try {
     const filter = {};
     if (req.query.gender) filter.gender = req.query.gender.toLowerCase();
-    if (req.query.country_id) filter.country_id = req.query.country_id.toLowerCase();
+    if (req.query.country_id) filter.country_id = req.query.country_id.toUpperCase();
     if (req.query.age_group) filter.age_group = req.query.age_group.toLowerCase();
 
     const profiles = await Profile.find(filter);
@@ -101,16 +92,10 @@ router.get('/', async (req, res) => {
       data: profiles
     });
   } catch (err) {
-    return res.status(500).json({
-      status: 'error',
-      message: err.message
-    });
+    return res.status(500).json({ status: 'error', message: err.message });
   }
 });
 
-module.exports = router;
-
-// GET /api/profiles/:id
 router.get('/:id', async (req, res) => {
   try {
     const profile = await Profile.findOne({ id: req.params.id });
@@ -119,11 +104,10 @@ router.get('/:id', async (req, res) => {
     }
     return res.status(200).json({ status: 'success', data: profile });
   } catch (err) {
-    return res.status(500).json({ status: 'error', message: 'Internal server error' });
+    return res.status(500).json({ status: 'error', message: err.message });
   }
 });
 
-// DELETE /api/profiles/:id
 router.delete('/:id', async (req, res) => {
   try {
     const profile = await Profile.findOneAndDelete({ id: req.params.id });
@@ -132,7 +116,7 @@ router.delete('/:id', async (req, res) => {
     }
     return res.status(204).send();
   } catch (err) {
-    return res.status(500).json({ status: 'error', message: 'Internal server error' });
+    return res.status(500).json({ status: 'error', message: err.message });
   }
 });
 

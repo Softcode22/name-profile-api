@@ -9,6 +9,7 @@ const profileSchema = new mongoose.Schema({
   age: { type: Number },
   age_group: { type: String },
   country_id: { type: String },
+  country_name: { type: String },
   country_probability: { type: Number },
   created_at: { type: Date, default: Date.now }
 });

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
+const { v7: uuidv7 } = require('uuid');
 const Profile = require('../models/Profile');
 
 const getAgeGroup = (age) => {

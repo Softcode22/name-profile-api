@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { v4: uuidv4 } = require('uuid');
+const { v7: uuidv7 } = require('uuid');
 const Profile = require('./models/Profile');
 const data = require('./seed_profiles.json');
 

@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
-const { v4: uuidv4 } = require('uuid');
-const Profile = require('./models/Profile');
-const data = require('./seed_profiles.json');
+import mongoose from 'mongoose';
+import { v7 as uuidv7 } from 'uuid';
+import Profile from './models/Profile.js';
+import data from './seed_profiles.json' assert { type: 'json' };
 
 const seed = async () => {
   await mongoose.connect(process.env.MONGO_URI);
@@ -15,7 +15,7 @@ const seed = async () => {
     if (exists) { skipped++; continue; }
 
     await Profile.create({
-      id: uuidv4(),
+      id: uuidv7(),
       ...profile,
       created_at: new Date().toISOString()
     });

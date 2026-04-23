@@ -21,7 +21,7 @@ const COUNTRY_MAP = {
   'congo': 'CG', 'drc': 'CD', 'ivory coast': 'CI', 'burkina faso': 'BF',
   'togo': 'TG', 'benin': 'BJ', 'liberia': 'LR', 'sierra leone': 'SL',
   'guinea': 'GN', 'gambia': 'GM', 'gabon': 'GA', 'eritrea': 'ER',
-  'egypt': 'EG', 'cape verde': 'CV', 'mauritius': 'MU'
+  'cape verde': 'CV', 'mauritius': 'MU'
 };
 
 const parseNaturalQuery = (q) => {
@@ -30,32 +30,48 @@ const parseNaturalQuery = (q) => {
   let interpreted = false;
 
   // Gender
-  if (text.includes('female')) { filter.gender = 'female'; interpreted = true; }
-  else if (text.includes('male')) { filter.gender = 'male'; interpreted = true; }
+  if (text.includes('female')) { 
+    filter.gender = 'female'; 
+    interpreted = true; 
+  } else if (text.includes('male')) { 
+    filter.gender = 'male'; 
+    interpreted = true; 
+  }
 
-  // Age groups
+  // Age groups - don't use else if to allow combinations with age ranges
   if (text.includes('young')) {
     filter.age = { $gte: 16, $lte: 24 };
     interpreted = true;
   } else if (text.includes('child')) {
-    filter.age_group = 'child'; interpreted = true;
+    filter.age_group = 'child'; 
+    interpreted = true;
   } else if (text.includes('teenager')) {
-    filter.age_group = 'teenager'; interpreted = true;
+    filter.age_group = 'teenager'; 
+    interpreted = true;
   } else if (text.includes('adult')) {
-    filter.age_group = 'adult'; interpreted = true;
+    filter.age_group = 'adult'; 
+    interpreted = true;
   } else if (text.includes('senior')) {
-    filter.age_group = 'senior'; interpreted = true;
-  }
-
-  // above/below patterns
-  const aboveMatch = text.match(/above\s+(\d+)/);
-  if (aboveMatch) {
-    filter.age = { ...filter.age, $gte: Number(aboveMatch[1]) };
+    filter.age_group = 'senior'; 
     interpreted = true;
   }
+
+  // above/below patterns - these can combine with age groups
+  const aboveMatch = text.match(/above\s+(\d+)/);
+  if (aboveMatch) {
+    if (!filter.age) {
+      filter.age = {};
+    }
+    filter.age.$gte = Number(aboveMatch[1]);
+    interpreted = true;
+  }
+  
   const belowMatch = text.match(/below\s+(\d+)/);
   if (belowMatch) {
-    filter.age = { ...filter.age, $lte: Number(belowMatch[1]) };
+    if (!filter.age) {
+      filter.age = {};
+    }
+    filter.age.$lte = Number(belowMatch[1]);
     interpreted = true;
   }
 
@@ -144,7 +160,7 @@ router.get('/search', async (req, res) => {
 
   const filter = parseNaturalQuery(q);
   if (!filter) {
-    return res.status(200).json({ status: 'error', message: 'Unable to interpret query' });
+    return res.status(400).json({ status: 'error', message: 'Unable to interpret query' });
   }
 
   try {
@@ -240,21 +256,6 @@ router.get('/:id', async (req, res) => {
 });
 
 // DELETE /api/profiles/:id
-router.delete('/:id', async (req, res) => {
-  try {
-    const profile = await Profile.findOneAndDelete({ id: req.params.id });
-    if (!profile) {
-      return res.status(404).json({ status: 'error', message: 'Profile not found' });
-    }
-    return res.status(204).send();
-  } catch (err) {
-    return res.status(500).json({ status: 'error', message: err.message });
-  }
-});
-
-module.exports = router;  }
-});
-
 router.delete('/:id', async (req, res) => {
   try {
     const profile = await Profile.findOneAndDelete({ id: req.params.id });

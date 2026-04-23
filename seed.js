@@ -3,7 +3,6 @@ const { v7: uuidv7 } = require('uuid');
 const Profile = require('./models/Profile');
 const data = require('./seed_profiles.json');
 
-require('dotenv').config();
 
 const seed = async () => {
   await mongoose.connect(process.env.MONGO_URI);

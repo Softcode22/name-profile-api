@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { v7: uuidv7 } = require('uuid');
+const { v4: uuidv4 } = require('uuid');
 const Profile = require('./models/Profile');
 const data = require('./seed_profiles.json');
 
@@ -15,7 +15,7 @@ const seed = async () => {
     if (exists) { skipped++; continue; }
 
     await Profile.create({
-      id: uuidv7(),
+      id: uuidv4(),
       ...profile,
       created_at: new Date().toISOString()
     });

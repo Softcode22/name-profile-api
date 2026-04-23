@@ -21,24 +21,23 @@ app.get('/seed', async (req, res) => {
     const Profile = require('./models/Profile');
     const data = require('./seed_profiles.json');
 
-    let inserted = 0;
-    let skipped = 0;
+    const profiles = data.profiles.map(profile => ({
+      id: uuidv7(),
+      ...profile,
+      created_at: new Date().toISOString()
+    }));
 
-    for (const profile of data.profiles) {
-      const exists = await Profile.findOne({ name: profile.name });
-      if (exists) { skipped++; continue; }
-      await Profile.create({
-        id: uuidv7(),
-        ...profile,
-        created_at: new Date().toISOString()
-      });
-      inserted++;
-    }
+    const result = await Profile.insertMany(profiles, { ordered: false });
 
-    return res.json({ status: 'success', inserted, skipped });
+    return res.json({ 
+      status: 'success', 
+      inserted: result.length
+    });
   } catch (err) {
+    // ordered:false means duplicates are skipped, not crashed
+    if (err.insertedDocs) {
+      return res.json({ status: 'success', inserted: err.insertedDocs.length });
+    }
     return res.status(500).json({ status: 'error', message: err.message });
   }
 });
-
-module.exports = app;
